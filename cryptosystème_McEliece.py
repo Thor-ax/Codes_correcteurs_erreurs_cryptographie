@@ -23,7 +23,7 @@ def Goppa(n, k, d_min):
     if(distance_min(G, d_min)):
         return(G)
     else:
-        #s'assurer que la condition de distance minimale est vérifiée
+        #s'assurer que la condition de distance minimale soit vérifiée
         return(Goppa(n, k, d_min))
 
 
