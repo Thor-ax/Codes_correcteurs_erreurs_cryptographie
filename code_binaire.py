@@ -133,7 +133,7 @@ de n (nombre de répétition de chaque bit) et de t (à n fixé on augmentent le
 
 def trace_tests(m, N, c):
     
-    for n in range(3, 20):
+    for n in range(3, 10):
         p = n * len(m)
         X = np.arange(1, p, 1)
         Y = []
@@ -143,5 +143,5 @@ def trace_tests(m, N, c):
     plt.show()
     
 
-#trace_tests([0,1,1,1], 1000, "0111") 
+trace_tests([0,1,1,1], 1000, "0111") 
         
