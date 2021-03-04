@@ -1,5 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Mar  4 10:16:10 2021
+
+@author: Maxime
+"""
+
+"""***** Codes Linéaires *****"""
+ 
+ 
 import numpy as np
-from numpy.linalg import solve, inv, lstsq
+from numpy.linalg import solve, inv, eigvals
             
 import random 
 
@@ -51,73 +61,6 @@ def distance_min(G, d_min):
             return False
     return True
 
-"""
-
-Retourne la matrice de Permutation P
-
-"""
-def perm(nb_col):
-  M = [i for i in range(nb_col)]  #Indices à changer en 1
-  random.shuffle(M) #Melange le tableau M
-
-  P = [[0]*nb_col for i in range(nb_col)] #Matrice nulle
-  for i in range(nb_col):
-    for j in range(len(M)):
-      n = M[j]
-    P[i][n] = 1
-    M.pop()
-
-  return(P)
-
-"""
-
-Retourne une matrice aléatoire (0 et 1) inversible
-
-"""
-def matriceAleatoireInversible(nb_lig):
-  inverse = [[0]*nb_lig for i in range(nb_lig)] 
-  Q = [[0]*nb_lig for i in range(nb_lig)] 
-  M = [[0]*nb_lig for i in range(nb_lig)] 
-  
-  while (np.array(inverse) == np.array(M)).all():
-    Q = aleatoire(nb_lig, nb_lig)
-    try:
-        #essaie d'inverser la matrice
-        inverse = inv(np.array(Q))   
-    except:
-        # si inversion impossible, on remet les coef à 01 pour rester dans la boucle while
-        inverse = [[0]*nb_lig for i in range(nb_lig)] 
-    
-  return Q
-
-"""
-
-créer une matrice aléatoire (0 et 1) de taille n * m
-
-"""
-def aleatoire(n, m):
-    #initialise la matrice à 0
-    M = [[0]*m for i in range(n)] 
-    for i in range(n):
-        for j in range(m):
-            M[i][j] = random.randint(0,1)
-    return M
-
-
-"""
-
-Retourne la clef publique G_pub
-
-Q: Matrice aléatoire inversible
-P: Matrice de permutation
-G: Matrice génératrice
-
-"""
-def ClefPublique(Q, G, P):
-    prod = np.dot(Q, G)
-    return( np.dot(prod, P)%2)
-
-
 """***** Chiffrement *****"""
 
 """
@@ -128,8 +71,8 @@ G_pub: clef publique
 
 """
 
-def c(m, G_pub):
-    return(np.dot(m, G_pub)%2)
+def c(m, G):
+    return(np.dot(m, G)%2)
 
 """
 
@@ -151,18 +94,15 @@ def erreur(c, t):
     print("e = " + str(E))
     return(c_2)
 
-
-
-#print(erreur([0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1], 3 ))
-
-#G_pub = np.array([[0,1,0,0,1,1,1,1,1,0,0,1,0,1,0], [1,1,1,0,0,1,1,0,1,1,0,0,1,1,0], [1,0,0,1,1,1,0,1,0,0,1,1,0,0,1]])
-#m = np.array([1,1,1])
-#print(c(m, G_pub))
-
-
-
 """***** Déchiffrement *****"""
 
+"""
+
+On recherche la position du vecteur syndrome dans la matrice H.
+Cette position correspond à la position de l'erreur dans le message reçu.
+Retourne la liste des messages possibles (le vecteur syndrome peut être présent dans plusieurs colonnes de H)
+
+"""
 def dechiffrement(H, S):
    
     l = []
@@ -174,18 +114,29 @@ def dechiffrement(H, S):
         s.append(l_1)
         l_1 = []
     for i in range(0, len(H[0])):
-        print("i = " + str(i))
-        print("H = " + str((H[:, [i]])))
         
         if((H[:, [i]] == s).all()):
+            
             l.append(i)
+            
     return(l)
             
 
 
-"""***** Decodage *****"""
+"""***** Décodage *****"""
+
+"""
+
+Après avoir localisé la ou les positions possible de l'erreur, il nous reste à 
+décoder pour avoir le ou les messages possible(s). Pour cela, on calcule c à partir de c_prime
+et de la liste des possibilités pour la position de la ou des erreurs.
+
+ensuite, on résoud le système c = mG pour obtenir m.
+
+"""
 
 def decodage(l, c_prime, G):
+    taille_mssg = len(G)
     res = [0 for i in range(len(l))]
     for k in range(len(l)):
         index = l[k]
@@ -193,14 +144,14 @@ def decodage(l, c_prime, G):
         y = (c_1[index] + 1)%2
         c_1[index] = y
         res[k] = c_1
-    # arrivé ici res contient la ou les possibilité pour c
+    # arrivé ici res contient la ou les possibilité(s) pour c
     # il faut résoudre le systeme c = xG où x sera le mot de code
     liste_sol = []
     for k in range(len(l)):
-        A = np.matrix(G)
-        B = np.matrix(np.transpose(res[k]))
-        solution = (B * A.I)
-        sol = np.array(solution[0])[0]
+        sol = []
+        for j in range(taille_mssg):
+            sol.append(res[k][j])
+
             
         liste_sol.append(sol)
    
@@ -215,8 +166,7 @@ codes linéaires
 def test(n, k, d):
     m = [random.randint(0,1) for i in range(k)]
     print("Le message est: " + str(m))
-    Q = matriceAleatoireInversible(k)
-    P = perm(n)
+    
     x = Generatrice_controle(n, k, d)
     G = x[0]
     print("G = " + str(G))
@@ -239,10 +189,8 @@ def test(n, k, d):
     print(dechif)
     print()
     print(decodage(dechif, c_prime, G))
+    print()
+    print("Taux d'indormation =" + str(k/n))
     
-
-    
-
 
 test(4, 2, 1)
-
