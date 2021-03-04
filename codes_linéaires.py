@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Mar  4 10:16:10 2021
-
-@author: Maxime
-"""
 
 """***** Codes Linéaires *****"""
  
- 
+
 import numpy as np
 from numpy.linalg import solve, inv, eigvals
             
 import random 
+import matplotlib.pyplot as plt
 
 
 """
@@ -91,7 +87,6 @@ def erreur(c, t):
         E[index] = 1
     for i in range (n):
         c_2[i] = (E[i] + c[i])%2
-    print("e = " + str(E))
     return(c_2)
 
 """***** Déchiffrement *****"""
@@ -104,7 +99,6 @@ Retourne la liste des messages possibles (le vecteur syndrome peut être présen
 
 """
 def dechiffrement(H, S):
-   
     l = []
     p = len(S)
     s = []
@@ -135,7 +129,7 @@ ensuite, on résoud le système c = mG pour obtenir m.
 
 """
 
-def decodage(l, c_prime, G):
+def decodage(l, c_prime, G, d, H):
     taille_mssg = len(G)
     res = [0 for i in range(len(l))]
     for k in range(len(l)):
@@ -150,47 +144,100 @@ def decodage(l, c_prime, G):
     for k in range(len(l)):
         sol = []
         for j in range(taille_mssg):
-            sol.append(res[k][j])
-
-            
+            sol.append(int(res[k][j])  ) 
+        
         liste_sol.append(sol)
-   
-    return(liste_sol)
+    if(len(liste_sol) > 1):
+        aleat = random.randint(0, len(liste_sol) - 1)
+        return(liste_sol[aleat])
+    else:
+        return(liste_sol[0])
 
 """
+
 Créé un message m aléatoirement et essaie de le décoder à l'aide des
 codes linéaires
 
-
+print(test(4, 2, 3, 1, [1,1])) => [1, 1]
 """
-def test(n, k, d):
-    m = [random.randint(0,1) for i in range(k)]
-    print("Le message est: " + str(m))
+
+def test(n, k, d, t, m):
+
     
     x = Generatrice_controle(n, k, d)
     G = x[0]
-    print("G = " + str(G))
+    #print("G = " + str(G))
     H = x[1]
     c = np.dot(m, G)%2
-    print("c = " + str(c))
-    print()
-    c_prime = erreur(c, 1)
-    print("c' = " + str(c_prime))
-    print()
-    
+    #print("c = " + str(c))
+    #print()
+    c_prime = erreur(c, t)
+    #print("c' = " + str(c_prime))
+    #print()
     
     S = np.dot(H, np.transpose(c_prime))%2
-    print("Syndrome = " + str(S))
-    print()
-        
-    print("H =" + str(H))
-    print()
-    dechif = dechiffrement(H, S)
-    print(dechif)
-    print()
-    print(decodage(dechif, c_prime, G))
-    print()
-    print("Taux d'indormation =" + str(k/n))
+    #print("Syndrome = " + str(S))
+    #print()
+    M = [0 for i in range(len(S))]
     
+    if((S == M).all()):
+        #print("c = " + str(c) +" est un mot de code")
+        #print()
+        taille_mssg = len(G)
+        sol = []
+        for j in range(taille_mssg):
+            sol.append(int(c[j]))
+        #print("Le message décodé est: " + str(sol))
+        #print()
+    else: 
+        #print("c = " + str(c) +" n'est pas un mot de code")
+        #print()
+        #print("H = " + str(H))
+        #print()
+        dechif = dechiffrement(H, S)
+        #print(dechif)
+        #print()
+        return(decodage(dechif, c_prime, G, d, H))
+    #print("Taux d'information = " + str(k/n))
+    
+print(test(4, 2, 3, 1, [1,1]))
 
-test(4, 2, 1)
+
+"""
+
+Effectue N test de décodage d'un message m et regarde le pourcentage de réussite
+
+ex: print(tests_multiples(50, 45, 6, 1000, [random.randint(0,1) for i in range(45)], 1)) => 47.3
+
+"""
+
+def tests_multiples(n, k, d, N, m, t):
+    s = 0
+    for p in range(N):
+        if(m == test(n, k, d, t, m)):
+            s += 1
+    return(100*(s/N))
+
+"""
+
+Tracé de statistique à n fixé, d fixé à n - k + 1 et en faisant varier k
+
+"""
+
+def trace_k(n, N, t):
+    
+    x = np.arange(1, n, 1)
+    y = []
+    z = []
+    for k in x:
+        m = [random.randint(0,1) for i in range(k)]
+        d = n - k + 1
+        y.append(tests_multiples(n, k, d, N, m, t))
+        z.append(100*(k/n))
+    plt.plot(x, y, label="Taux de réussite en %")
+    plt.plot(x, z, label="Taux d'information en %")
+    plt.legend()
+    plt.xlabel("Taille k du message")
+    plt.show()
+    
+trace_k(20, 1000, 1)
