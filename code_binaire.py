@@ -8,6 +8,7 @@ import random
 
 converti un str en liste
 ex: conv("001") => [0, 0, 1]
+
 """
 
 def conv(c):
@@ -17,10 +18,12 @@ def conv(c):
     return(liste)
     
 """
+
 ajoute de la redondance dans le mots de code
 répète n fois chaque bits
 
 exemple: redondance(3, [0,1,0]) => [0,0,0,1,1,1,0,0,0]
+
 """
 
 def redondance(n, l):
@@ -31,11 +34,13 @@ def redondance(n, l):
     return(res)
 
 """
+
 Ajoute une erreur de poid t au message
 
 exemple1: erreur([1,1,1,0,0,0,1,1,1], 2) => [1, 1, 0, 0, 0, 1, 1, 1, 1]
 
 exemple2:erreur([1,1,1,0,0,0,1,1,1], 4) => [1, 1, 0, 1, 0, 1, 1, 1, 0]
+
 """
 def erreur(l, t):
     l_1 = l
@@ -123,25 +128,33 @@ def tests_multiples(m, N, n, c, t):
         decode = tests(n, c, t)
         if(decode == m):
             s += 1
-    return(s/N)
+    return(100*(s/N))
         
 
 """
+
 Pour que les statistiques soient plus visuels, tracer les courbes pour différentes valeurs
 de n (nombre de répétition de chaque bit) et de t (à n fixé on augmentent le nombre d'erreur)
 """
 
 def trace_tests(m, N, c):
     
-    for n in range(3, 10):
+    for n in range(3, 11):
         p = n * len(m)
         X = np.arange(1, p, 1)
         Y = []
         for i in range(1, p):
             Y.append(tests_multiples(m, N, n, c, i))
-        plt.plot(X, Y)
+        s = "r = " + str(n-1) #r correspond au nombre de répétition)
+        plt.plot(X, Y, label=s)
+    x = np.arange(1, 40, 1)
+    y = [90 for i in range(len(x))]
+    plt.plot(x, y, label = "90%")
+    
+    plt.legend()
+    plt.xlabel("nombre d'erreurs")
+    plt.ylabel("pourcentage de réussite")
     plt.show()
     
 
 trace_tests([0,1,1,1], 1000, "0111") 
-        
